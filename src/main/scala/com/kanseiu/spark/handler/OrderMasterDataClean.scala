@@ -74,19 +74,26 @@ object OrderMasterDataClean {
         // 从 hbase 中读取指定的数据
         val sc: SparkContext = sparkSession.sparkContext
         val scan = new Scan()
+
+        // 使用正则表达式过滤器来匹配特定日期的数据
         val comparator = new RegexStringComparator(extractDateRegex)
         val rowFilter = new RowFilter(CompareOperator.EQUAL, comparator)
         scan.setFilter(rowFilter)
+
+        // 将Scan对象转换为协议缓冲区格式，并进行Base64编码
         val proto = ProtobufUtil.toScan(scan)
         val scanStr = Base64.getEncoder.encodeToString(proto.toByteArray)
 
+        // 设置HBase配置
         val conf = HBaseConfiguration.create()
-        val hbaseContext = new HBaseContext(sc, conf)
         conf.set(TableInputFormat.INPUT_TABLE, hbaseTableName)
         conf.set(TableInputFormat.SCAN, scanStr)
+
+        // 使用HBaseContext读取HBase数据
+        val hbaseContext = new HBaseContext(sc, conf)
         val hbaseRDD = hbaseContext.hbaseRDD(TableName.valueOf(hbaseTableName), scan)
 
-        // 读取hbase数据，并转换成row
+        // 转换HBase数据为DataFrame所需的Row
         val hbaseDF = hbaseRDD.map{ case(_, result) =>
             val order_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_id")))
             val order_sn = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_sn")))
@@ -118,6 +125,7 @@ object OrderMasterDataClean {
                 pay_time, receive_time, order_status, order_point, invoice_title, modified_time)
         }
 
+        // 定义DataFrame的schema
         val schema = StructType(Array(
             StructField("order_id", IntegerType),
             StructField("order_sn", StringType),
@@ -144,6 +152,7 @@ object OrderMasterDataClean {
             StructField("modified_time", StringType)
         ))
 
+        // 使用提取的数据和定义的schema创建DataFrame
         val hbaseData = sparkSession.createDataFrame(hbaseDF, schema)
 
         // 合并hive 和 hbase 中的数据
@@ -171,6 +180,7 @@ object OrderMasterDataClean {
             coalesce($"hive_order_point", $"order_point").alias("order_point"),
             coalesce($"hive_invoice_title", $"invoice_title").alias("invoice_title"),
             coalesce($"hive_modified_time", $"modified_time").alias("modified_time"),
+
             lit("user1").alias("dwd_insert_user"),
             currentTime.alias("dwd_insert_time"),
             lit("user1").alias("dwd_modify_user"),
