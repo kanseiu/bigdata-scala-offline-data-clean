@@ -1,6 +1,6 @@
 package com.kanseiu.spark.handler
 
-import com.kanseiu.spark.common.Constants
+import com.kanseiu.spark.common.SparkSessionBuilder
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
@@ -11,14 +11,7 @@ object CustomerAddrLevelAggrDataClean {
         val dwdTableName: String = "dws.customer_addr_level_aggr"
 
         // 创建 sparkSession
-        val sparkSession: SparkSession = SparkSession.builder
-          .appName(s"$tableName offline data clean")
-          .config("spark.sql.warehouse.dir", Constants.sparkWarehouse)
-          .config("hive.metastore.uris", Constants.metastoreUris)
-          .config("spark.executor.memory", "512m") // 根据需要设置 executor 内存
-          .config("hive.exec.dynamic.partition.mode", "nonstrict")
-          .enableHiveSupport()
-          .getOrCreate()
+        val sparkSession: SparkSession = SparkSessionBuilder.getOrCreateSparkSession(s"$tableName offline data clean")
 
         // 设置当前和昨天的日期
         val today = java.time.LocalDate.now()

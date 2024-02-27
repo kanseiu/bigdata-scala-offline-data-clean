@@ -8,7 +8,7 @@ object Constants {
     // sparkWarehouse
     val sparkWarehouse: String = s"hdfs://$host:9000/user/hive/warehouse"
 
-    //metastoreUris
+    // metastoreUris
     val metastoreUris: String = s"thrift://$host:9083"
 
 }
