@@ -1,5 +1,7 @@
 package com.kanseiu.spark.handler
 
+import com.kanseiu.spark.common.Constants._
+import com.kanseiu.spark.common.HbaseCliUtil._
 import com.kanseiu.spark.common.SparkSessionBuilder
 import org.apache.hadoop.hbase.{CompareOperator, HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.Scan
@@ -67,21 +69,20 @@ object OrderDetailDataClean {
         val hbaseRDD = hbaseContext.hbaseRDD(TableName.valueOf(hbaseTableName), scan)
 
         val hbaseDF = hbaseRDD.map { case (_, result) =>
-            val order_detail_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_detail_id")))
-            val order_sn = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_sn")))
-            val product_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("product_id")))
-            val product_name = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("product_name")))
-            val product_cnt = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("product_cnt")))
-            val product_price = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("product_price")))
-            val average_cost = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("average_cost")))
-            val weight = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("weight")))
-            val fee_money = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("fee_money")))
-            val w_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("w_id")))
-            val create_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("create_time")))
-            val modified_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("modified_time")))
-
-            Row(order_detail_id, order_sn, product_id, product_name, product_cnt, product_price, average_cost,
-                weight, fee_money, w_id, create_time, modified_time)
+            Row(
+                getValue[Int](result, colFamilyName, "order_detail_id", Bytes.toInt),
+                getValue[String](result, colFamilyName, "order_sn", Bytes.toString),
+                getValue[Int](result, colFamilyName, "product_id", Bytes.toInt),
+                getValue[String](result, colFamilyName, "product_name", Bytes.toString),
+                getValue[Int](result, colFamilyName, "product_cnt", Bytes.toInt),
+                getValue[Double](result, colFamilyName, "product_price", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "average_cost", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "weight", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "fee_money", Bytes.toDouble),
+                getValue[Int](result, colFamilyName, "w_id", Bytes.toInt),
+                getValue[String](result, colFamilyName, "create_time", Bytes.toString),
+                getValue[String](result, colFamilyName, "create_time", Bytes.toString)
+            )
         }
 
         val schema = StructType(Array(

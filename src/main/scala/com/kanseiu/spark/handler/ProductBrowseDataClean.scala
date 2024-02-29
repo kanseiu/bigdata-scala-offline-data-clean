@@ -1,5 +1,7 @@
 package com.kanseiu.spark.handler
 
+import com.kanseiu.spark.common.Constants._
+import com.kanseiu.spark.common.HbaseCliUtil._
 import com.kanseiu.spark.common.SparkSessionBuilder
 import org.apache.hadoop.hbase.{CompareOperator, HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.Scan
@@ -62,14 +64,14 @@ object ProductBrowseDataClean {
         val hbaseRDD = hbaseContext.hbaseRDD(TableName.valueOf(hbaseTableName), scan)
 
         val hbaseDF = hbaseRDD.map { case (_, result) =>
-            val log_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("log_id")))
-            val product_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("product_id")))
-            val customer_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("customer_id")))
-            val gen_order = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("gen_order")))
-            val order_sn = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_sn")))
-            val modified_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("modified_time")))
-
-            Row(log_id, product_id, customer_id, gen_order, order_sn, modified_time)
+            Row(
+                getValue[Int](result, colFamilyName, "log_id", Bytes.toInt),
+                getValue[Int](result, colFamilyName, "product_id", Bytes.toInt),
+                getValue[Int](result, colFamilyName, "customer_id", Bytes.toInt),
+                getValue[Int](result, colFamilyName, "gen_order", Bytes.toInt),
+                getValue[String](result, colFamilyName, "order_sn", Bytes.toString),
+                getValue[String](result, colFamilyName, "modified_time", Bytes.toString)
+            )
         }
 
         val schema = StructType(Array(

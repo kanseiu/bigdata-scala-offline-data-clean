@@ -66,7 +66,7 @@ object CustomerInfDataClean {
         // 将数据写入临时表
         combinedData.createOrReplaceTempView("temp_combined_data")
 
-        // 使用Hive SQL将临时表数据写入到dwdTableName
+        // 使用Hive SQL将临时表数据写入到dwdTableName（覆盖写入）
         sparkSession.sql(
             s"""
                 INSERT OVERWRITE TABLE $dwdTableName PARTITION (etl_date)

@@ -11,4 +11,6 @@ object Constants {
     // metastoreUris
     val metastoreUris: String = s"thrift://$host:9083"
 
+    val colFamilyName: String = "Info"
+
 }

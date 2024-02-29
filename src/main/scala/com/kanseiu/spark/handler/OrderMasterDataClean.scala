@@ -1,5 +1,7 @@
 package com.kanseiu.spark.handler
 
+import com.kanseiu.spark.common.Constants._
+import com.kanseiu.spark.common.HbaseCliUtil._
 import com.kanseiu.spark.common.SparkSessionBuilder
 import org.apache.hadoop.hbase.{CompareOperator, HBaseConfiguration, TableName}
 import org.apache.hadoop.hbase.client.Scan
@@ -13,7 +15,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.sql.functions.{coalesce, current_timestamp, lit}
 import org.apache.spark.sql.types.{DoubleType, IntegerType, StringType, StructField, StructType}
 
-import java.sql.Timestamp
 import java.util.Base64
 
 object OrderMasterDataClean {
@@ -95,34 +96,31 @@ object OrderMasterDataClean {
 
         // 转换HBase数据为DataFrame所需的Row
         val hbaseDF = hbaseRDD.map{ case(_, result) =>
-            val order_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_id")))
-            val order_sn = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_sn")))
-            val customer_id = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("customer_id")))
-            val shipping_user = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("shipping_user")))
-            val province = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("province")))
-            val city = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("city")))
-            val address = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("address")))
-            val order_source = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_source")))
-            val payment_method = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("payment_method")))
-            val order_money = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_money")))
-            val district_money = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("district_money")))
-            val shipping_money = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("shipping_money")))
-            val payment_money = Bytes.toDouble(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("payment_money")))
-            val shipping_comp_name = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("shipping_comp_name")))
-            val shipping_sn = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("shipping_sn")))
-            val create_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("create_time")))
-            val shipping_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("shipping_time")))
-            val pay_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("pay_time")))
-            val receive_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("receive_time")))
-            val order_status = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_status")))
-            val order_point = Bytes.toInt(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("order_point")))
-            val invoice_title = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("invoice_title")))
-            val modified_time = Bytes.toString(result.getValue(Bytes.toBytes("Info"), Bytes.toBytes("modified_time")))
-
-            Row(order_id, order_sn, customer_id, shipping_user, province, city, address,
-                order_source, payment_method, order_money, district_money, shipping_money,
-                payment_money, shipping_comp_name, shipping_sn, create_time, shipping_time,
-                pay_time, receive_time, order_status, order_point, invoice_title, modified_time)
+            Row(
+                getValue[Int](result, colFamilyName, "order_id", Bytes.toInt),
+                getValue[String](result, colFamilyName, "order_sn", Bytes.toString),
+                getValue[Int](result, colFamilyName, "customer_id", Bytes.toInt),
+                getValue[String](result, colFamilyName, "shipping_user", Bytes.toString),
+                getValue[String](result, colFamilyName, "province", Bytes.toString),
+                getValue[String](result, colFamilyName, "city", Bytes.toString),
+                getValue[String](result, colFamilyName, "address", Bytes.toString),
+                getValue[Int](result, colFamilyName, "order_source", Bytes.toInt),
+                getValue[Int](result, colFamilyName, "payment_method", Bytes.toInt),
+                getValue[Double](result, colFamilyName, "order_money", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "district_money", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "shipping_money", Bytes.toDouble),
+                getValue[Double](result, colFamilyName, "payment_money", Bytes.toDouble),
+                getValue[String](result, colFamilyName, "shipping_comp_name", Bytes.toString),
+                getValue[String](result, colFamilyName, "shipping_sn", Bytes.toString),
+                getValue[String](result, colFamilyName, "create_time", Bytes.toString),
+                getValue[String](result, colFamilyName, "shipping_time", Bytes.toString),
+                getValue[String](result, colFamilyName, "pay_time", Bytes.toString),
+                getValue[String](result, colFamilyName, "receive_time", Bytes.toString),
+                getValue[String](result, colFamilyName, "order_status", Bytes.toString),
+                getValue[Int](result, colFamilyName, "order_point", Bytes.toInt),
+                getValue[String](result, colFamilyName, "invoice_title", Bytes.toString),
+                getValue[String](result, colFamilyName, "modified_time", Bytes.toString)
+            )
         }
 
         // 定义DataFrame的schema
